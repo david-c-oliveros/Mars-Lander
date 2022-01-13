@@ -1,10 +1,11 @@
 #include "Lander.h"
 
-Lander::Lander(float x, float y)
+Lander::Lander(float x, float y, float fTheta)
 {
-    lander_spr = new olc::Sprite("./res/sprites/temp/enemy_1_sprite.png");
-    lander_dec = new olc::Decal(lander_spr);
-    this->vPos = { x, y };
+    landerSprite = new olc::Sprite("./res/sprites/temp/enemy_1_sprite.png");
+    landerDecal = new olc::Decal(landerSprite);
+    vPos = { x, y };
+    fAngle = fTheta;
 }
 
 Lander::~Lander() {}
@@ -19,9 +20,10 @@ void Lander::setVel(olc::vf2d vVel)
     this->vVel = vVel;
 }
 
-void Lander::draw(olc::PixelGameEngine* pge)
+void Lander::drawSelf(olc::PixelGameEngine* pge)
 {
-    pge->DrawDecal(this->vPos, lander_dec, {4.0f, 4.0f });
+//    pge->DrawDecal(this->vPos, lander_dec, {4.0f, 4.0f });
+    pge->DrawRotatedDecal(vPos, landerDecal, fAngle, { 0.0, 0.0 }, {4.0f, 4.0f });
 }
 
 olc::vf2d Lander::getPos()
@@ -39,8 +41,9 @@ void Lander::addVel(olc::vf2d v)
     this->vVel +=  v;
 }
 
-void Lander::update(olc::vf2d vDeltaVel)
+void Lander::update(olc::vf2d vDeltaVel, float fTheta)
 {
-    this->vVel += vDeltaVel;
-    this->vPos += this->vVel;
+    vVel += vDeltaVel;
+    vPos += vVel;
+    fAngle += fTheta;
 }

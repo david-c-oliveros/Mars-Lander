@@ -1,5 +1,8 @@
 #include "Lander.h"
 #include "vendor/olcPixelGameEngine.h"
+#include "vendor/olcPGEX_Graphics2D.h"
+#include "vendor/olcPGEX_TransformedView.h"
+#include <sstream>
 
 
 /**********************************/
@@ -25,6 +28,7 @@ class Game : public olc::PixelGameEngine
         int iFrameCount = 0;
         float fAvg;
         float fTotalTime;
+        float fRotate = 0.0f;
 
     public:
         Game()
@@ -38,7 +42,7 @@ class Game : public olc::PixelGameEngine
         {
             // Set gravity variable - will later encapsulate into gravity function
 
-            marsLander = new Lander(50, 50);
+            marsLander = new Lander(50, 50, 0);
             marsLander->setPos({ (float)ScreenWidth() / 2, 50 });
             vGrav = { 0.0, 1.0 };
             vDeltaVel = { 0.0, 0.0 };
@@ -58,29 +62,33 @@ class Game : public olc::PixelGameEngine
 //                return true;
 //            }
 
+
             /***********************************/
             /*     Respond to Player Input     */
             /***********************************/
-            this->vDeltaVel = { 0.0, 0.0 };
+            vDeltaVel = { 0.0f, 0.0f };
+            fRotate = 0.0f;
             if (GetKey(olc::Key::NP0).bHeld) vDeltaVel += {  0.0, -1.5};
-            if (GetKey(olc::Key::A).bHeld) vDeltaVel   += { -0.5,  0.0};
-            if (GetKey(olc::Key::D).bHeld) vDeltaVel   += {  0.5,  0.0};
+            if (GetKey(olc::Key::A).bHeld) fRotate += 0.01f;
+            if (GetKey(olc::Key::D).bHeld) fRotate -= 0.01f;
 
             vDeltaVel += vGrav;
             vDeltaVel *= fElapsedTime;
-            marsLander->update(vDeltaVel);
+            marsLander->update(vDeltaVel, fRotate);
 
+
+            /******************************/
+            /*        Clear Screen        */
+            /******************************/
             Clear(olc::VERY_DARK_BLUE);
 
-            // Debug - Set Lander position to top of screen after it falls off the bottom
-            if (marsLander->getPos().y > ScreenHeight())
-            {
-                marsLander->setPos({ (float)ScreenWidth() / 2, 50 });
-                marsLander->setVel({ 0.0, 0.0 });
-            }
 
-            marsLander->draw(this);
+            /***************************/
+            /*        Draw Call        */
+            /***************************/
+            marsLander->drawSelf(this);
 
+            // Debug - Print average fElapsedTime
             fTotalTime += fElapsedTime;
             iFrameCount++;
             if (iFrameCount % 1000 == 0)
@@ -89,6 +97,24 @@ class Game : public olc::PixelGameEngine
                 std::cout << fAvg << std::endl;
                 fTotalTime = 0.0f;
             }
+
+            // Debug - Draw Lander's velcity
+            std::stringstream ss;
+            ss << marsLander->getVel();
+            std::string s = ss.str();
+            DrawString(25, 25, s, olc::WHITE, 4);
+
+            /***********************************/
+            /*     Check Border Collisions     */
+            /***********************************/
+            if (marsLander->getPos().y >= ScreenHeight() - 75)
+            {
+                marsLander->setPos({ marsLander->getPos().x, ScreenHeight() - 75 });
+                olc::vf2d vV = { 0.4f, -0.1f };
+                olc::vf2d vNewVel = marsLander->getVel() * vV;
+                marsLander->setVel(vNewVel);
+            }
+
             return true;
         }
 };
