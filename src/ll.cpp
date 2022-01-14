@@ -5,6 +5,21 @@
 #include <sstream>
 
 
+
+
+/***************************/
+/*        Functions        */
+/***************************/
+
+void printVec(olc::GFX3D::vec3d v)
+{
+    std::cout << v.x << ", " << v.y << ", " << v.z << std::endl;
+}
+
+
+
+
+
 /**********************************/
 /*        Global Variables        */
 /**********************************/
@@ -24,7 +39,7 @@ class Game : public olc::PixelGameEngine
 
         olc::GFX3D::vec3d vGrav;
         olc::GFX3D::vec3d vDeltaVel;
-        olc::GFX3D::vec3d vThrustMag = { 0.0f, -1.5f, 0.0f };
+        float fThrustMag = -1.5f;
 
         float fTargetFrameTime = 1.0f / 200.0f;
         float fAccumulatedTime = 0.0f;
@@ -45,8 +60,8 @@ class Game : public olc::PixelGameEngine
         {
             marsLander = new Lander(50, 50, 0);
             marsLander->setPos({ (float)ScreenWidth() / 2, 50 });
-            vGrav = { 0.0f, 0.05f, 0.0f };
-//            vDeltaVel = { 0.0f, 0.0f, 0.0f };
+            vGrav = { 0.0f, 0.4f, 0.0f };
+            vDeltaVel = { 0.0f, 0.0f, 0.0f };
             marsLander->printSpriteSize();
 
             return true;
@@ -68,16 +83,24 @@ class Game : public olc::PixelGameEngine
             /***********************************/
             /*     Respond to Player Input     */
             /***********************************/
-//            vDeltaVel = { 0.0f, 0.0f, 0.0f };
+            vDeltaVel = { 0.0f, 0.0f, 0.0f };
             fRotate = 0.0f;
 
             olc::GFX3D::vec3d vUnitVec = { 0, 1, 0 };
             olc::GFX3D::mat4x4 mRotMatrix = olc::GFX3D::Math::Mat_MakeRotationZ(marsLander->getRot());
-            vDeltaVel = olc::GFX3D::Math::Mat_MultiplyVector(mRotMatrix, vUnitVec);
+//            olc::GFX3D::vec3d vVelDir = olc::GFX3D::Math::Mat_MultiplyVector(mRotMatrix, vUnitVec);
 
-            if (GetKey(olc::Key::NP0).bHeld) vDeltaVel = olc::GFX3D::Math::Vec_Add(vDeltaVel, vThrustMag);
+            if (GetKey(olc::Key::NP0).bHeld)
+            {
+                olc::GFX3D::vec3d vVelDir = olc::GFX3D::Math::Mat_MultiplyVector(mRotMatrix, vUnitVec);
+                olc::GFX3D::vec3d vThrustVec = olc::GFX3D::Math::Vec_Mul(vVelDir, fThrustMag);
+                vDeltaVel = olc::GFX3D::Math::Vec_Add(vDeltaVel, vThrustVec);
+            }
+
             if (GetKey(olc::Key::A).bHeld) fRotate -= 0.01f;
             if (GetKey(olc::Key::D).bHeld) fRotate += 0.01f;
+
+//            vDeltaVel = olc::GFX3D::Math::Vec_Add(vDeltaVel, vVelDir);
 
             /******************************************/
             /*        Add Acceleration Vectors        */
@@ -130,12 +153,6 @@ class Game : public olc::PixelGameEngine
             return true;
         }
 };
-
-
-
-/***************************/
-/*        Functions        */
-/***************************/
 
 
 
