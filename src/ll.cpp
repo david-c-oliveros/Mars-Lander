@@ -1,6 +1,6 @@
 #include "Lander.h"
 #include "vendor/olcPixelGameEngine.h"
-#include "vendor/olcPGEX_Graphics2D.h"
+#include "vendor/olcPGEX_Graphics3D.h"
 #include "vendor/olcPGEX_TransformedView.h"
 #include <sstream>
 
@@ -21,8 +21,11 @@ class Game : public olc::PixelGameEngine
         olc::Sprite* spr = nullptr;
         olc::Decal* dec = nullptr;
         Lander* marsLander = nullptr;
-        olc::vf2d vGrav;
-        olc::vf2d vDeltaVel;
+
+        olc::GFX3D::vec3d vGrav;
+        olc::GFX3D::vec3d vDeltaVel;
+        olc::GFX3D::vec3d vThrustMag = { 0.0f, -1.5f, 0.0f };
+
         float fTargetFrameTime = 1.0f / 200.0f;
         float fAccumulatedTime = 0.0f;
         int iFrameCount = 0;
@@ -40,12 +43,11 @@ class Game : public olc::PixelGameEngine
     public:
         bool OnUserCreate() override
         {
-            // Set gravity variable - will later encapsulate into gravity function
-
             marsLander = new Lander(50, 50, 0);
             marsLander->setPos({ (float)ScreenWidth() / 2, 50 });
-            vGrav = { 0.0, 1.0 };
-            vDeltaVel = { 0.0, 0.0 };
+            vGrav = { 0.0f, 0.05f, 0.0f };
+//            vDeltaVel = { 0.0f, 0.0f, 0.0f };
+            marsLander->printSpriteSize();
 
             return true;
         }
@@ -66,14 +68,22 @@ class Game : public olc::PixelGameEngine
             /***********************************/
             /*     Respond to Player Input     */
             /***********************************/
-            vDeltaVel = { 0.0f, 0.0f };
+//            vDeltaVel = { 0.0f, 0.0f, 0.0f };
             fRotate = 0.0f;
-            if (GetKey(olc::Key::NP0).bHeld) vDeltaVel += {  0.0, -1.5};
-            if (GetKey(olc::Key::A).bHeld) fRotate += 0.01f;
-            if (GetKey(olc::Key::D).bHeld) fRotate -= 0.01f;
 
-            vDeltaVel += vGrav;
-            vDeltaVel *= fElapsedTime;
+            olc::GFX3D::vec3d vUnitVec = { 0, 1, 0 };
+            olc::GFX3D::mat4x4 mRotMatrix = olc::GFX3D::Math::Mat_MakeRotationZ(marsLander->getRot());
+            vDeltaVel = olc::GFX3D::Math::Mat_MultiplyVector(mRotMatrix, vUnitVec);
+
+            if (GetKey(olc::Key::NP0).bHeld) vDeltaVel = olc::GFX3D::Math::Vec_Add(vDeltaVel, vThrustMag);
+            if (GetKey(olc::Key::A).bHeld) fRotate -= 0.01f;
+            if (GetKey(olc::Key::D).bHeld) fRotate += 0.01f;
+
+            /******************************************/
+            /*        Add Acceleration Vectors        */
+            /******************************************/
+            vDeltaVel = olc::GFX3D::Math::Vec_Add(vDeltaVel, vGrav);
+            vDeltaVel = olc::GFX3D::Math::Vec_Mul(vDeltaVel, fElapsedTime);
             marsLander->update(vDeltaVel, fRotate);
 
 
@@ -100,7 +110,8 @@ class Game : public olc::PixelGameEngine
 
             // Debug - Draw Lander's velcity
             std::stringstream ss;
-            ss << marsLander->getVel();
+            olc::vf2d vVel2D = { marsLander->getVel().x, marsLander->getVel().y };
+            ss << vVel2D;
             std::string s = ss.str();
             DrawString(25, 25, s, olc::WHITE, 4);
 
@@ -109,10 +120,11 @@ class Game : public olc::PixelGameEngine
             /***********************************/
             if (marsLander->getPos().y >= ScreenHeight() - 75)
             {
-                marsLander->setPos({ marsLander->getPos().x, ScreenHeight() - 75 });
-                olc::vf2d vV = { 0.4f, -0.1f };
-                olc::vf2d vNewVel = marsLander->getVel() * vV;
-                marsLander->setVel(vNewVel);
+                marsLander->setPos({ marsLander->getPos().x, (float)ScreenHeight() - 75 });
+//                olc::GFX3D::vec3d vV = { 0.4f,  0.0f, 0.0f };
+//                olc::GFX3D::vec3d vV = { 0.0f, -0.1f, 0.0f };
+//                olc::GFX3D::vec3d vNewVel = marsLander->getVel() * vV;
+//                marsLander->setVel(vNewVel);
             }
 
             return true;
