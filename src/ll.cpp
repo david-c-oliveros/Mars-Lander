@@ -37,9 +37,9 @@ class Game : public olc::PixelGameEngine
         olc::Decal* dec = nullptr;
         Lander* marsLander = nullptr;
 
-        olc::GFX3D::vec3d vGrav;
-        olc::GFX3D::vec3d vDeltaVel;
-        float fThrustMag = -1.5f;
+        olc::GFX3D::vec3d vGrav = { 0.0f, 0.4f, 0.0f };
+        olc::GFX3D::vec3d vDeltaVel = { 0.0f, 0.0f, 0.0f };
+        float fThrustMag = -1.0f;
 
         float fTargetFrameTime = 1.0f / 200.0f;
         float fAccumulatedTime = 0.0f;
@@ -47,6 +47,8 @@ class Game : public olc::PixelGameEngine
         float fAvg;
         float fTotalTime;
         float fRotate = 0.0f;
+        bool bControlSystem = true;
+        bool bInput;
 
     public:
         Game()
@@ -60,8 +62,6 @@ class Game : public olc::PixelGameEngine
         {
             marsLander = new Lander(50, 50, 0);
             marsLander->setPos({ (float)ScreenWidth() / 2, 50 });
-            vGrav = { 0.0f, 0.4f, 0.0f };
-            vDeltaVel = { 0.0f, 0.0f, 0.0f };
             marsLander->printSpriteSize();
 
             return true;
@@ -84,11 +84,10 @@ class Game : public olc::PixelGameEngine
             /*     Respond to Player Input     */
             /***********************************/
             vDeltaVel = { 0.0f, 0.0f, 0.0f };
-            fRotate = 0.0f;
+//            fRotate = 0.0f;
 
             olc::GFX3D::vec3d vUnitVec = { 0, 1, 0 };
             olc::GFX3D::mat4x4 mRotMatrix = olc::GFX3D::Math::Mat_MakeRotationZ(marsLander->getRot());
-//            olc::GFX3D::vec3d vVelDir = olc::GFX3D::Math::Mat_MultiplyVector(mRotMatrix, vUnitVec);
 
             if (GetKey(olc::Key::NP0).bHeld)
             {
@@ -97,10 +96,20 @@ class Game : public olc::PixelGameEngine
                 vDeltaVel = olc::GFX3D::Math::Vec_Add(vDeltaVel, vThrustVec);
             }
 
-            if (GetKey(olc::Key::A).bHeld) fRotate -= 0.01f;
-            if (GetKey(olc::Key::D).bHeld) fRotate += 0.01f;
+            if (bControlSystem && !bInput) fRotate *= 0.99f;
 
-//            vDeltaVel = olc::GFX3D::Math::Vec_Add(vDeltaVel, vVelDir);
+            if (GetKey(olc::Key::A).bHeld)
+            {
+                bInput = true;
+                fRotate -= 0.00005f;
+            } else { bInput = false; }
+
+            if (GetKey(olc::Key::D).bHeld)
+            {
+                bInput = true;
+                fRotate += 0.00005f;
+            } else { bInput = false; }
+
 
             /******************************************/
             /*        Add Acceleration Vectors        */
