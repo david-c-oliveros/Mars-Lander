@@ -174,7 +174,7 @@ class Game : public olc::PixelGameEngine
 int main()
 {
     Game demo;
-    if (demo.Construct(1600,  1200, 1, 1))
+    if (demo.Construct(1600,  1200, 1, 1, false, true))
     {
         demo.Start();
     }
