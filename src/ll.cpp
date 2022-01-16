@@ -84,7 +84,6 @@ class Game : public olc::PixelGameEngine
             /*     Respond to Player Input     */
             /***********************************/
             vDeltaVel = { 0.0f, 0.0f, 0.0f };
-//            fRotate = 0.0f;
 
             olc::GFX3D::vec3d vUnitVec = { 0, 1, 0 };
             olc::GFX3D::mat4x4 mRotMatrix = olc::GFX3D::Math::Mat_MakeRotationZ(marsLander->getRot());
@@ -129,34 +128,38 @@ class Game : public olc::PixelGameEngine
             /*        Draw Call        */
             /***************************/
             marsLander->drawSelf(this);
+            marsLander->drawExhaust(this);
 
-            // Debug - Print average fElapsedTime
-            fTotalTime += fElapsedTime;
-            iFrameCount++;
-            if (iFrameCount % 1000 == 0)
-            {
-                fAvg = fTotalTime / 1000;
-                std::cout << fAvg << std::endl;
-                fTotalTime = 0.0f;
-            }
 
             // Debug - Draw Lander's velcity
-            std::stringstream ss;
-            olc::vf2d vVel2D = { marsLander->getVel().x, marsLander->getVel().y };
-            ss << vVel2D;
-            std::string s = ss.str();
-            DrawString(25, 25, s, olc::WHITE, 4);
+            {
+                std::stringstream ss;
+                olc::vf2d vVel2D = { marsLander->getVel().x, marsLander->getVel().y };
+                ss << vVel2D;
+                std::string s = ss.str();
+                DrawString(25, 25, s, olc::WHITE, 2);
+            }
+
+
+            // Debug - Draw Lander's position
+            {
+                std::stringstream ss;
+                olc::vf2d vPos2D = { marsLander->getPos().x, marsLander->getPos().y };
+                ss << vPos2D;
+                std::string s = ss.str();
+                DrawString(25, 75, s, olc::WHITE, 2);
+            }
+
+
 
             /***********************************/
             /*     Check Border Collisions     */
             /***********************************/
-            if (marsLander->getPos().y >= ScreenHeight() - 75)
+            if (marsLander->getPos().y >= ScreenHeight() - (marsLander->getSpriteHeight() / 2))
             {
-                marsLander->setPos({ marsLander->getPos().x, (float)ScreenHeight() - 75 });
-//                olc::GFX3D::vec3d vV = { 0.4f,  0.0f, 0.0f };
-//                olc::GFX3D::vec3d vV = { 0.0f, -0.1f, 0.0f };
-//                olc::GFX3D::vec3d vNewVel = marsLander->getVel() * vV;
-//                marsLander->setVel(vNewVel);
+                marsLander->setPos({ marsLander->getPos().x, (float)ScreenHeight() - ((float)marsLander->getSpriteHeight() / 2)});
+                olc::GFX3D::vec3d vNewVel = { marsLander->getVel().x * 0.4f, marsLander->getVel().y * -0.1f };
+                marsLander->setVel(vNewVel);
             }
 
             return true;
